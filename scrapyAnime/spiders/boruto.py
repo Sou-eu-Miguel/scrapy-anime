@@ -6,8 +6,11 @@ from ..src.models.episodio import Episodio
 
 
 class BorutoSpider(scrapy.Spider):
+
     name = 'boruto'
     start_urls = ['http://boruto.com.br/']
+    dominio = 'http://boruto.com.br'
+    page = -1
 
     def parse(self, response):
 
@@ -15,20 +18,22 @@ class BorutoSpider(scrapy.Spider):
 
         divs_gerais = response.xpath('//*[@id="conteudo"]')
         div_central = divs_gerais.xpath('//*[@id="centro_area"]')
-        tbs_episodio = div_central.xpath('.//table[contains(@style,"margin-bottom:15px;")]')
+        tbs_episodio = div_central.xpath('.//table[1]')
+        paginacao = div_central.xpath('.//p[contains(@class,"main_pagination")]//a/@href')
 
         for tb in tbs_episodio:
-            episodio = self.getDadosEpisodio(tb.xpath('.//*[@id="HOTWordsTxt"]/div[2]/div/div'))
-            if episodio:
 
+            episodio = self.getDadosEpisodio(tb.xpath('.//div[contains(@class,"boxr")]'))
+            if episodio.dados['nome']:
                 boruto.dados['episodios'].append(episodio)
+
                 yield episodio.dados
 
-        return
+        yield self.proximaPagina(paginacao)
 
     def getDadosEpisodio(self, episodio_web):
 
-        episodio = Episodio(
+        return Episodio(
 
             img=episodio_web.xpath('.//div[1]/img[2]/@src').extract_first(),
             nome=episodio_web.xpath('.//div[2]/div/text()').extract_first(),
@@ -36,4 +41,13 @@ class BorutoSpider(scrapy.Spider):
 
         )
 
-        return episodio
+    def proximaPagina(self, paginacao):
+        self.page += 1
+        if self.page < len(paginacao):
+
+            proxima_pagina = paginacao[self.page].extract()
+
+            return scrapy.Request(
+                url='{}{}'.format(self.dominio, proxima_pagina),
+                callback=self.parse
+            )
