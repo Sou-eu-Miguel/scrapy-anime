@@ -3,7 +3,7 @@
 </p>
 
 # Scrapy-Anime
-Web scrapy de animes(alguns que tive curiosidade)[EM ANDAMENTO...]
+Web scrapy de animes(alguns que tive curiosidade)[TEMPORARIAMENTE INTERROMPIDO]
 
 ## Estrutura do diretório
 ```sh
